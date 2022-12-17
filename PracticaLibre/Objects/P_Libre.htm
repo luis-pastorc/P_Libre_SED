@@ -3,11 +3,11 @@
 <title>Static Call Graph - [.\Objects\P_Libre.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\P_Libre.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Dec 17 15:38:51 2022
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Dec 17 18:53:19 2022
 <BR><P>
 <H3>Maximum Stack Usage =         16 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
-__rt_entry_main &rArr; main &rArr; configura_Interrupciones &rArr; __NVIC_SetPriority
+__rt_entry_main &rArr; main &rArr; config_Interrupciones &rArr; __NVIC_SetPriority
 <P>
 <H3>
 Functions with no stack information
@@ -197,7 +197,7 @@ Global Symbols
 
 <P><STRONG><a name="[3c]"></a>__rt_entry_main</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$0000000D))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16 + Unknown Stack Size
-<LI>Call Chain = __rt_entry_main &rArr; main &rArr; configura_Interrupciones &rArr; __NVIC_SetPriority
+<LI>Call Chain = __rt_entry_main &rArr; main &rArr; config_Interrupciones &rArr; __NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;exit
 <LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
@@ -422,38 +422,30 @@ Global Symbols
 
 <P><STRONG><a name="[78]"></a>__semihosting_library_function</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, indicate_semi.o(.text), UNUSED)
 
-<P><STRONG><a name="[20]"></a>EINT0_IRQHandler</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, practica_libre.o(i.EINT0_IRQHandler))
+<P><STRONG><a name="[20]"></a>EINT0_IRQHandler</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, practica_libre.o(i.EINT0_IRQHandler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_lpc17xx.o(RESET)
 </UL>
-<P><STRONG><a name="[21]"></a>EINT1_IRQHandler</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, practica_libre.o(i.EINT1_IRQHandler))
+<P><STRONG><a name="[21]"></a>EINT1_IRQHandler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, practica_libre.o(i.EINT1_IRQHandler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_lpc17xx.o(RESET)
 </UL>
-<P><STRONG><a name="[22]"></a>EINT2_IRQHandler</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, practica_libre.o(i.EINT2_IRQHandler))
+<P><STRONG><a name="[22]"></a>EINT2_IRQHandler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, practica_libre.o(i.EINT2_IRQHandler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_lpc17xx.o(RESET)
 </UL>
 <P><STRONG><a name="[f]"></a>TIMER0_IRQHandler</STRONG> (Thumb, 40 bytes, Stack size 0 bytes, practica_libre.o(i.TIMER0_IRQHandler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_lpc17xx.o(RESET)
 </UL>
-<P><STRONG><a name="[4c]"></a>config_Systick</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, practica_libre.o(i.config_Systick))
-<BR><BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-</UL>
-
 <P><STRONG><a name="[d]"></a>SysTick_Handler</STRONG> (Thumb, 178 bytes, Stack size 0 bytes, practica_libre.o(i.SysTick_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_lpc17xx.o(RESET)
 </UL>
 <P><STRONG><a name="[31]"></a>SystemInit</STRONG> (Thumb, 302 bytes, Stack size 0 bytes, system_lpc17xx.o(i.SystemInit))
 <BR>[Address Reference Count : 1]<UL><LI> startup_lpc17xx.o(.text)
 </UL>
-<P><STRONG><a name="[4a]"></a>config_GPIO</STRONG> (Thumb, 98 bytes, Stack size 0 bytes, practica_libre.o(i.config_GPIO))
+<P><STRONG><a name="[4a]"></a>config_GPIO</STRONG> (Thumb, 118 bytes, Stack size 0 bytes, practica_libre.o(i.config_GPIO))
 <BR><BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[4b]"></a>config_Timer0</STRONG> (Thumb, 42 bytes, Stack size 0 bytes, practica_libre.o(i.config_Timer0))
-<BR><BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-</UL>
-
-<P><STRONG><a name="[46]"></a>configura_Interrupciones</STRONG> (Thumb, 142 bytes, Stack size 8 bytes, practica_libre.o(i.configura_Interrupciones))
-<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = configura_Interrupciones &rArr; __NVIC_SetPriority
+<P><STRONG><a name="[46]"></a>config_Interrupciones</STRONG> (Thumb, 170 bytes, Stack size 8 bytes, practica_libre.o(i.config_Interrupciones))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = config_Interrupciones &rArr; __NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[48]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__NVIC_SetPriority
 <LI><a href="#[49]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__NVIC_EnableIRQ
@@ -462,12 +454,20 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[3d]"></a>main</STRONG> (Thumb, 342 bytes, Stack size 0 bytes, practica_libre.o(i.main))
-<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = main &rArr; configura_Interrupciones &rArr; __NVIC_SetPriority
+<P><STRONG><a name="[4c]"></a>config_Systick</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, practica_libre.o(i.config_Systick))
+<BR><BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
-<BR>[Calls]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configura_Interrupciones
-<LI><a href="#[4b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Timer0
+
+<P><STRONG><a name="[4b]"></a>config_Timer0</STRONG> (Thumb, 42 bytes, Stack size 0 bytes, practica_libre.o(i.config_Timer0))
+<BR><BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
+</UL>
+
+<P><STRONG><a name="[3d]"></a>main</STRONG> (Thumb, 388 bytes, Stack size 0 bytes, practica_libre.o(i.main))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = main &rArr; config_Interrupciones &rArr; __NVIC_SetPriority
+</UL>
+<BR>[Calls]<UL><LI><a href="#[4b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Timer0
 <LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Systick
+<LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Interrupciones
 <LI><a href="#[4a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_GPIO
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry_main
@@ -477,17 +477,17 @@ Global Symbols
 Local Symbols
 </H3>
 <P><STRONG><a name="[47]"></a>__NVIC_ClearPendingIRQ</STRONG> (Thumb, 22 bytes, Stack size 0 bytes, practica_libre.o(i.__NVIC_ClearPendingIRQ))
-<BR><BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configura_Interrupciones
+<BR><BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Interrupciones
 </UL>
 
 <P><STRONG><a name="[49]"></a>__NVIC_EnableIRQ</STRONG> (Thumb, 34 bytes, Stack size 0 bytes, practica_libre.o(i.__NVIC_EnableIRQ))
-<BR><BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configura_Interrupciones
+<BR><BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Interrupciones
 </UL>
 
 <P><STRONG><a name="[48]"></a>__NVIC_SetPriority</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, practica_libre.o(i.__NVIC_SetPriority))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = __NVIC_SetPriority
 </UL>
-<BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configura_Interrupciones
+<BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;config_Interrupciones
 </UL>
 <P>
 <H3>
