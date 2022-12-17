@@ -388,11 +388,6 @@
               <FileType>1</FileType>
               <FilePath>.\Ficheros\Practica_libre.c</FilePath>
             </File>
-            <File>
-              <FileName>pruebas.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\pruebas.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

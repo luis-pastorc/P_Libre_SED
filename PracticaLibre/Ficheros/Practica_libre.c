@@ -1,4 +1,3 @@
-/* main.c */
 #include "lpc17xx.h"
 
 uint32_t SystemFrequency=100000000;
@@ -7,9 +6,20 @@ uint32_t cuenta_1ms,visualizar;  // Contador de ms
 
 int NUMEROS[10] = {0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90}; //0....9
 int HOLA[4] = {0x89,0xC0,0xC7,0x88};	//H O L A
-int tiempo[7] = {0,0,0,0,0,0,0}; //decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de hora, decenas de horas
-int i;
+int tiempo[8] = {0,0,0,0,0,0,0,0}; //, centesimas de s,decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de hora, decenas de horas
+int alarma1[7] = {0,0,0,0,0,0,0}; //decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de hora, decenas de horas
+int alarma2[7] = {0,0,0,0,0,0,0}; //decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de hora, decenas de horas
+int temp1[7] = {0,0,0,0,0,0,0}; //decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de hora, decenas de horas
+int temp2[7] = {0,0,0,0,0,0,0}; //decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de hora, decenas de horas
+int m;	//cambia cada 5ms para visualizar
 int interrupciones;
+int entradas;	//para gestionar el switch
+int switch_horas_seg;	//elegir horas+mins o segs+decs
+int switch_alarma_1;
+int switch_alarma_2;
+int switch_temp_1;
+int switch_temp_2;
+int x;	//para mostrar horas o segundos
 
 void config_GPIO (void)
 {
@@ -26,15 +36,24 @@ void config_GPIO (void)
 	LPC_PINCON->PINMODE0 &= ~(3<<2*3);		//P0.3 a pull-up
 } 
 
-void configura_Interrupciones()
+void config_Systick(void)
 {
-	NVIC_SetPriority(SysTick_IRQn, 0x1);
-	
-	SysTick->LOAD = 999999;		//interrumpe cada ms 0.001
+	SysTick->LOAD = 9999999;		//interrumpe cada 0.1s
 	SysTick->VAL = 0;
 	SysTick->CTRL = 7;
-	
-	
+}
+
+void config_Timer0(void)	//Interrumpe cada 5ms
+ {
+	LPC_SC ->PCLKSEL0 |= 1<<3;
+	LPC_TIM0 ->MCR =0x3;
+	LPC_TIM0 -> MR0 = 250000;
+	LPC_TIM0 ->TC =0;
+	LPC_TIM0 ->TCR |=(1<<0);
+ }
+ 
+void configura_Interrupciones()
+{
 	//EINT0 Y EINT1 activas por flanco
 	//LPC_SC -> EXTMODE |= (1<<0);
 	//LPC_SC -> EXTMODE |= (1<<1);
@@ -50,57 +69,67 @@ void configura_Interrupciones()
 	
 	//Asignación de prioridades
   NVIC_SetPriorityGrouping(4);
-  NVIC_SetPriority(EINT0_IRQn, 0x2);	//001.00XXX
-  NVIC_SetPriority(EINT1_IRQn, 0x2);	//001.10XXX
-  NVIC_SetPriority(EINT2_IRQn, 0x2);	//000.10XXX
+	NVIC_SetPriority(SysTick_IRQn, 0x2);
+	NVIC_SetPriority (TIMER0_IRQn, 0x2);	//000.10XXX
+  NVIC_SetPriority(EINT0_IRQn, 0x6);		//001.10XXX
+  NVIC_SetPriority(EINT1_IRQn, 0x6);		//001.10XXX
+  NVIC_SetPriority(EINT2_IRQn, 0x6);		//001.10XXX
+	
 
 	//Habilitación de las interrupciones
   NVIC_EnableIRQ(EINT0_IRQn);
   NVIC_EnableIRQ(EINT1_IRQn);
   NVIC_EnableIRQ(EINT2_IRQn);
+	NVIC_EnableIRQ (TIMER0_IRQn);
+	NVIC_EnableIRQ (TIMER0_IRQn);
+	NVIC_EnableIRQ (SysTick_IRQn);
 }    
-
-void SysTick_Handler(void)		// ISRdel SYSTICK Interrumpe cada 100ms
+ 
+  void TIMER0_IRQHandler (void)	//Hace que i varíe de 0 a 4
+ {
+		LPC_TIM0 -> IR |= (1<<0);	//Borra el flag 
+		m++;
+		if(m>=4)
+			m=0;
+ }
+ 
+void SysTick_Handler(void)		//Gestiona los valores del reloj
 {
-	cuenta_1ms++;
-	visualizar++;
-	if(cuenta_1ms>=10)	//100ms = 0,1s
-	{
-		tiempo[0]++;	//decima de segundo
-		cuenta_1ms=0;
-	}
-	if(tiempo[0]>=10)
-	{
-		tiempo[1]++;	//unidad de segundo
-		tiempo[0]=0;
-	}
+	//tiempo[0] son las centesimas de s, que siempre valdrán 0
+	tiempo[1]++;	//decima de segundo
 	if(tiempo[1]>=10)
 	{
-		tiempo[2]++;	//decima de segundo
+		tiempo[2]++;	//unidad de segundo
 		tiempo[1]=0;
 	}
-	if(tiempo[2]>=6)
+	if(tiempo[2]>=10)
 	{
-		tiempo[3]++;	//unidad de minuto
+		tiempo[3]++;	//decena de segundo
 		tiempo[2]=0;
 	}
-	if(tiempo[3]>=10)
+	if(tiempo[3]>=6)
 	{
-		tiempo[4]++;	//decima de minuto
+		tiempo[4]++;	//unidad de minuto
 		tiempo[3]=0;
 	}
-	if(tiempo[4]>=6)
+	if(tiempo[4]>=10)
 	{
-		tiempo[5]++;	//unidad de hora
+		tiempo[5]++;	//decena de minuto
 		tiempo[4]=0;
 	}
-	if(tiempo[5]>=10)
+	if(tiempo[5]>=6)
 	{
-		tiempo[6]++;	//decima de hora
+		tiempo[6]++;	//unidad de hora
 		tiempo[5]=0;
 	}
-	if(tiempo[6]>=2 && tiempo[5]==4)	//si llega a 24h reinicia
+	if(tiempo[6]>=10)
 	{
+		tiempo[7]++;	//decima de hora
+		tiempo[6]=0;
+	}
+	if(tiempo[7]>=2 && tiempo[6]==4)	//si llega a 24h reinicia
+	{
+		int i;
 		for (i=0;i<7;i++)
 		{
 			tiempo[i]=0;
@@ -126,47 +155,54 @@ void EINT2_IRQHandler()
 int main (void)
 { 
 	cuenta_1ms=0;
-	visualizar=0;
   configura_Interrupciones();
 	config_GPIO();
+	config_Timer0();
+	config_Systick();
+	
 	while(1) 
 	{
-		if ((LPC_GPIO2->FIOPIN & (1<<13))==0)											// PULSADOR PULSADO
-		{  
-				for(i=0;i<6;i++)
-				{
-						tiempo[i]=0;
-				}
+		if ((LPC_GPIO0->FIOPIN & (1<<3))==0)	//P0.3 == 0
+		{
+			if(switch_horas_seg == 0)
+						x=0;	//muestra horas y minutos
+					else
+						x=0;	//muestrasegundos y decimas
+					
+			entradas = LPC_GPIO0->FIOPIN & 4;
+			switch(entradas)
+			{
+				case 0:				//visualizar Timer
+					LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[m+x]])<<20;
+					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					continue;
+				
+				case 1:				//visualizar Alarma_1
+					LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[m+1]])<<20;
+					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					continue;
+				
+				case 2:				//visualizar Alarma_2
+					LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[m+1]])<<20;
+					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					continue;
+				
+				case 3:				//visualizar Temporizador_1
+					LPC_GPIO1->FIOPIN = (NUMEROS[temp1[m+1]])<<20;
+					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					continue;
+				
+				case 4:				//visualizar Temporizador_2
+					LPC_GPIO1->FIOPIN = (NUMEROS[temp2[m+1]])<<20;
+					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					continue;
+			 }
 		}
-		else 																											//PULSADOR SIN PULSAR
+		else			//P0.3 == 1 Visualiza HOLA
 		{	
-			
-			if ((LPC_GPIO0->FIOPIN & (1<<3))==0) 										//SELECTOR=0 -> TIMER
-			{	
-				for(i=0;i<4;i++)
-				{	
-					visualizar=0;
-					LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[i+1]])<<20;
-					LPC_GPIO2->FIOPIN = (1 << (3-i)) & 0xF;
-					if(visualizar>=5)
-					{
-						continue;
-					}
-				}
-			} 
-			else																										//SELECTOR=1 -> HOLA
-			{	
-				for(i=0;i<4;i++)
-				{	
-					visualizar=0;
-					LPC_GPIO1->FIOPIN = (HOLA[i])<<20;
-					LPC_GPIO2->FIOPIN = (1 << i) & 0xF;
-					if(visualizar>=5)
-					{
-						continue;
-					}
-				}
-			}	
+				LPC_GPIO1->FIOPIN = (HOLA[m])<<20;
+				LPC_GPIO2->FIOPIN = (1 << m) & 0xF;
+				continue;
 		}
-  }
+	}
 }
