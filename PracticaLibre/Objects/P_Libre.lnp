@@ -1,5 +1,6 @@
 --cpu Cortex-M3
 ".\objects\practica_libre.o"
+".\objects\delay.o"
 ".\objects\startup_lpc17xx.o"
 ".\objects\system_lpc17xx.o"
 --strict --scatter ".\Objects\P_Libre.sct"

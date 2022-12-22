@@ -1,4 +1,5 @@
 #include "lpc17xx.h"
+#include "delay.h"
 
 uint32_t SystemFrequency=100000000;
 
@@ -16,6 +17,8 @@ int switch_alarma_2;
 int switch_temp_1;
 int switch_temp_2;
 int x;	//para mostrar horas o segundos
+int prog; //para acceder al modo programación
+int incr;
 
 void config_GPIO (void)
 {
@@ -54,9 +57,11 @@ void config_Timer0(void)	//Interrumpe cada 5ms
 void config_Interrupciones()
 {
 	LPC_SC -> EXTMODE |= (1<<0);		//EINT0 activa por flanco
-	//LPC_SC -> EXTMODE |= (1<<1);	//EINT1 activa por flanco
-	LPC_SC -> EXTPOLAR |= (1<<0);		//EINT0 activa por flanco de subida
-	//LPC_SC -> EXTPOLAR &= ~(1<<1);	//EINT1 activa por flanco de bajada
+	LPC_SC -> EXTMODE |= (1<<1);		//EINT1 activa por flanco
+	LPC_SC -> EXTMODE |= (1<<2);		//EINT2 activa por flanco
+	LPC_SC -> EXTPOLAR &= ~(1<<0);	//EINT0 activa por flanco de subida
+	LPC_SC -> EXTPOLAR &= ~(1<<1);	//EINT1 activa por flanco de subida
+	LPC_SC -> EXTPOLAR &= ~(1<<2);	//EINT2 activa por flanco de subida
 	LPC_SC -> EXTINT |= (0x07);			//flags
 	
 	//Bajar el flag
@@ -78,17 +83,16 @@ void config_Interrupciones()
   NVIC_EnableIRQ(EINT1_IRQn);
   NVIC_EnableIRQ(EINT2_IRQn);
 	NVIC_EnableIRQ (TIMER0_IRQn);
-	NVIC_EnableIRQ (TIMER0_IRQn);
 	NVIC_EnableIRQ (SysTick_IRQn);
 }    
  
-  void TIMER0_IRQHandler (void)	//Hace que i varíe de 0 a 4
- {
-		LPC_TIM0 -> IR |= (1<<0);	//Borra el flag 
-		m++;
-		if(m>=4)
-			m=0;
- }
+void TIMER0_IRQHandler (void)	//Hace que i varíe de 0 a 4
+{
+	LPC_TIM0 -> IR |= (1<<0);	//Borra el flag 
+	m++;
+	if(m>=4)
+		m=0;
+}
  
 void SysTick_Handler(void)		//Gestiona los valores del reloj
 {
@@ -135,22 +139,32 @@ void SysTick_Handler(void)		//Gestiona los valores del reloj
 	}
 }
 
-void EINT0_IRQHandler()	//Controla la visualización
+void EINT0_IRQHandler()	//Controla la visualización KEY0
 {
+	delay_1ms(150);
 	LPC_SC->EXTINT |= (1);   // Borrar el flag de la EINT0 --> EXTINT.0
 	entradas++;
 	if (entradas>4)
 		entradas=0;
 }
 
-void EINT1_IRQHandler()
+void EINT1_IRQHandler()	//Accede al modo programación KEY1: 0 No progamacion... 1-4 cada digito
 {
-
+	delay_1ms(150);
+	LPC_SC->EXTINT |= (1<<1);   // Borrar el flag de la EINT1
+	incr=0;
+	prog++;
+	if (prog>4)
+		prog = 0;
 }
 
 void EINT2_IRQHandler()
 {
-
+	delay_1ms(150);
+	LPC_SC->EXTINT |= (1<<2);   // Borrar el flag de la EINT2
+	incr++;
+	if (incr>9)
+		incr = 0;
 }
 
 int main (void)
@@ -170,10 +184,10 @@ int main (void)
 			else
 					x=4;	//muestra minutos y horas
 					
-			/*if(m==2)
-				LPC_GPIO1->FIOPIN |= (1<<19); //Enciendo punto
-			else
+			/*if(m!=2)
 				LPC_GPIO1->FIOPIN &= ~(1<<19); //Apago punto
+			else
+				LPC_GPIO1->FIOPIN |= (1<<19); //Enciendo punto
 			*/
 			
 			switch(entradas)
@@ -181,6 +195,14 @@ int main (void)
 				case 0:				//visualizar Timer
 					LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[m+x]])<<20;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+				
+					while (prog!=0)
+					{
+						LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[3+prog]])<<20;
+						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
+						tiempo[3+prog]=incr;
+					}
+						
 					continue;
 				
 				case 1:				//visualizar Alarma_1
@@ -206,7 +228,6 @@ int main (void)
 		}
 		else			//P0.3 == 1 Visualiza HOLA
 		{	
-				
 				LPC_GPIO1->FIOPIN = (HOLA[m])<<20;
 				LPC_GPIO2->FIOPIN = (1 << m) & 0xF;
 				continue;
