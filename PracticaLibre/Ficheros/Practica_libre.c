@@ -6,8 +6,8 @@ uint32_t SystemFrequency=100000000;
 int NUMEROS[10]={0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90}; //0....9
 int HOLA[4]= {0x89,0xC0,0xC7,0x88};	//H O L A
 int tiempo[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
-int alarma1[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
-int alarma2[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
+int alarma1[4]={0,0,0,0}; //unidades de m, decenas de m, unidades de h, decenas de h
+int alarma2[4]={0,0,0,0}; //unidades de m, decenas de m, unidades de h, decenas de h
 int temp1[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
 int temp2[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
 int m;	//cambia cada 5ms para visualizar
@@ -19,6 +19,7 @@ int switch_temp_2;
 int x;	//para mostrar horas o segundos
 int prog; //para acceder al modo programación
 int incr;
+int enable_Temp1;
 
 void config_GPIO (void)
 {
@@ -32,10 +33,12 @@ void config_GPIO (void)
   LPC_GPIO2->FIODIR &= ~(1<<13);				// P2.13 definido como entrada - PULSADOR Reseteo timer
 	LPC_GPIO0->FIODIR &= ~(1<<2);					// P0.2 definido como entrada - Switch horas/segundos
 	LPC_GPIO0->FIODIR &= ~(1<<3);					// P0.3 definido como entrada - Switch texto/timer
+	LPC_GPIO1->FIODIR &= ~(1<<0);					// P1.0 definido como entrada - Switch Temp1 
 	
 	LPC_PINCON->PINMODE2 &= ~(3<<2*13);		//P2.13 a pull-up
 	LPC_PINCON->PINMODE0 &= ~(3<<2*3);		//P0.3 a pull-up
 	LPC_PINCON->PINMODE0 |= (3<<2*2);		//P0.2 a pull-down
+	LPC_PINCON->PINMODE1 |= (3<<0*2);		//P0.2 a pull-down
 } 
 
 void config_Systick(void)
@@ -97,7 +100,6 @@ void TIMER0_IRQHandler (void)	//Hace que i varíe de 0 a 4
 void SysTick_Handler(void)		//Gestiona los valores del reloj
 {
 	//tiempo[0] son las centesimas de s, que siempre valdrán 0
-	
 	tiempo[1]++;	//decima de segundo
 	if(tiempo[1]>=10)
 	{
@@ -126,7 +128,7 @@ void SysTick_Handler(void)		//Gestiona los valores del reloj
 	}
 	if(tiempo[6]>=10)
 	{
-		tiempo[7]++;	//decima de hora
+		tiempo[7]++;	//decena de hora
 		tiempo[6]=0;
 	}
 	if(tiempo[7]>=2 && tiempo[6]==4)	//si llega a 24h reinicia
@@ -135,6 +137,69 @@ void SysTick_Handler(void)		//Gestiona los valores del reloj
 		for (i=0;i<7;i++)
 		{
 			tiempo[i]=0;
+		}
+	}
+	
+	if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 1
+	{
+		temp1[1]--;
+		if(temp1[1]==0)
+		{
+			if(temp1[2]!=0)
+			{
+				temp1[2]--;
+				temp1[1]=9;
+			}
+			else if(temp1[3]!=0)
+			{
+				temp1[3]--;
+				temp1[2]=9;
+				temp1[1]=9;
+			}
+			else if(temp1[4]!=0)
+			{
+				temp1[4]--;
+				temp1[3]=9;
+				temp1[2]=9;
+				temp1[1]=9;
+			}
+			else if(temp1[5]!=0)
+			{
+				temp1[5]--;
+				temp1[4]=9;
+				temp1[3]=9;
+				temp1[2]=9;
+				temp1[1]=9;
+			}
+			else if(temp1[6]!=0)
+			{
+				temp1[6]--;
+				temp1[5]=9;
+				temp1[4]=9;
+				temp1[3]=9;
+				temp1[2]=9;
+				temp1[1]=9;
+				
+			}
+			else if(temp1[7]!=0)
+			{
+				temp1[7]--;
+				temp1[6]=9;
+				temp1[5]=9;
+				temp1[4]=9;
+				temp1[3]=9;
+				temp1[2]=9;
+				temp1[1]=9;
+			}
+			else
+			{
+				//FIN DEL TEMP1
+				int i;
+			for (i=0;i<7;i++)
+			{
+				temp1[i]=0;
+			}
+			}
 		}
 	}
 }
@@ -158,7 +223,7 @@ void EINT1_IRQHandler()	//Accede al modo programación KEY1: 0 No progamacion... 
 		prog = 0;
 }
 
-void EINT2_IRQHandler()
+void EINT2_IRQHandler()	//Boton incr
 {
 	delay_1ms(150);
 	LPC_SC->EXTINT |= (1<<2);   // Borrar el flag de la EINT2
@@ -184,7 +249,8 @@ int main (void)
 			else
 					x=4;	//muestra minutos y horas
 					
-			/*if(m!=2)
+			/*
+			if(m!=2)
 				LPC_GPIO1->FIOPIN &= ~(1<<19); //Apago punto
 			else
 				LPC_GPIO1->FIOPIN |= (1<<19); //Enciendo punto
@@ -201,28 +267,55 @@ int main (void)
 						LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[3+prog]])<<20;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
 						tiempo[3+prog]=incr;
-					}
-						
+					}	
 					continue;
 				
 				case 1:				//visualizar Alarma_1
 					LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[m+x]])<<20;
-					LPC_GPIO2->FIOPIN = (1 << (4-m)) & 0xF;
+					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+				
+					while (prog!=0)
+					{
+						LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[3+prog]])<<20;
+						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
+						alarma1[3+prog]=incr;
+					}	
 					continue;
 				
 				case 2:				//visualizar Alarma_2
 					LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[m+x]])<<20;
-					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+				
+					while (prog!=0)
+					{
+						LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[3+prog]])<<20;
+						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
+						alarma2[3+prog]=incr;
+					}	
 					continue;
 				
 				case 3:				//visualizar Temporizador_1
 					LPC_GPIO1->FIOPIN = (NUMEROS[temp1[m+x]])<<20;
-					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+				
+					while (prog!=0)
+					{
+						LPC_GPIO1->FIOPIN = (NUMEROS[temp1[3+prog]])<<20;
+						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
+						temp1[3+prog]=incr;
+					}	
 					continue;
 				
 				case 4:				//visualizar Temporizador_2
 					LPC_GPIO1->FIOPIN = (NUMEROS[temp2[m+x]])<<20;
-					LPC_GPIO2->FIOPIN = (1 << (m)) & 0xF;
+					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+					
+					while (prog!=0)
+					{
+						LPC_GPIO1->FIOPIN = (NUMEROS[temp2[3+prog]])<<20;
+						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
+						temp2[3+prog]=incr;
+					}	
 					continue;
 			 }
 		}
