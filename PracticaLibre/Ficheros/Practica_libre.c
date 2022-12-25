@@ -12,14 +12,9 @@ int temp1[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, 
 int temp2[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
 int m;	//cambia cada 5ms para visualizar
 int entradas;	//para gestionar el switch
-int switch_alarma_1;
-int switch_alarma_2;
-int switch_temp_1;
-int switch_temp_2;
 int x;	//para mostrar horas o segundos
 int prog; //para acceder al modo programación
 int incr;
-int enable_Temp1;
 
 void config_GPIO (void)
 {
@@ -30,15 +25,15 @@ void config_GPIO (void)
 	
   LPC_GPIO1->FIODIR |= (255<<19);				// P1.19 hasta P1.26 definido como salida
 	LPC_GPIO2->FIODIR |= (15<<0);					// P2.0 hasta P2.3 como salida
-  LPC_GPIO2->FIODIR &= ~(1<<13);				// P2.13 definido como entrada - PULSADOR Reseteo timer
 	LPC_GPIO0->FIODIR &= ~(1<<2);					// P0.2 definido como entrada - Switch horas/segundos
 	LPC_GPIO0->FIODIR &= ~(1<<3);					// P0.3 definido como entrada - Switch texto/timer
 	LPC_GPIO1->FIODIR &= ~(1<<0);					// P1.0 definido como entrada - Switch Temp1 
+	LPC_GPIO1->FIODIR &= ~(1<<4);					// P1.4 definido como entrada - Switch Alarma1
 	
-	LPC_PINCON->PINMODE2 &= ~(3<<2*13);		//P2.13 a pull-up
 	LPC_PINCON->PINMODE0 &= ~(3<<2*3);		//P0.3 a pull-up
 	LPC_PINCON->PINMODE0 |= (3<<2*2);		//P0.2 a pull-down
-	LPC_PINCON->PINMODE1 |= (3<<0*2);		//P0.2 a pull-down
+	LPC_PINCON->PINMODE2 |= (3<<0*2);		//P1.0 a pull-down
+	LPC_PINCON->PINMODE2 |= (3<<4*2);		//P1.4 a pull-down
 } 
 
 void config_Systick(void)
@@ -97,7 +92,7 @@ void TIMER0_IRQHandler (void)	//Hace que i varíe de 0 a 4
 		m=0;
 }
  
-void SysTick_Handler(void)		//Gestiona los valores del reloj
+void Sys_Reloj()
 {
 	//tiempo[0] son las centesimas de s, que siempre valdrán 0
 	tiempo[1]++;	//decima de segundo
@@ -139,72 +134,164 @@ void SysTick_Handler(void)		//Gestiona los valores del reloj
 			tiempo[i]=0;
 		}
 	}
-	
-	if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 1
+}
+
+void Sys_Timer1()
+{
+	if(temp1[1]!=0)
 	{
 		temp1[1]--;
-		if(temp1[1]==0)
+	}
+	else if(temp1[2]!=0)
+	{
+		temp1[2]--;
+		temp1[1]=9;
+	}
+	else if(temp1[3]!=0)
+	{
+		temp1[3]--;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else if(temp1[4]!=0)
+	{
+		temp1[4]--;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else if(temp1[5]!=0)
+	{
+		temp1[5]--;
+		temp1[4]=9;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else if(temp1[6]!=0)
+	{
+		temp1[6]--;
+		temp1[5]=5;
+		temp1[4]=9;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;	
+	}
+	else if(temp1[7]!=0)
+	{
+		temp1[7]--;
+		temp1[6]=9;
+		temp1[5]=5;
+		temp1[4]=9;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else
+	{
+		//FIN DEL TEMP1
+		int i;
+		for (i=0;i<7;i++)
 		{
-			if(temp1[2]!=0)
-			{
-				temp1[2]--;
-				temp1[1]=9;
-			}
-			else if(temp1[3]!=0)
-			{
-				temp1[3]--;
-				temp1[2]=9;
-				temp1[1]=9;
-			}
-			else if(temp1[4]!=0)
-			{
-				temp1[4]--;
-				temp1[3]=9;
-				temp1[2]=9;
-				temp1[1]=9;
-			}
-			else if(temp1[5]!=0)
-			{
-				temp1[5]--;
-				temp1[4]=9;
-				temp1[3]=9;
-				temp1[2]=9;
-				temp1[1]=9;
-			}
-			else if(temp1[6]!=0)
-			{
-				temp1[6]--;
-				temp1[5]=9;
-				temp1[4]=9;
-				temp1[3]=9;
-				temp1[2]=9;
-				temp1[1]=9;
-				
-			}
-			else if(temp1[7]!=0)
-			{
-				temp1[7]--;
-				temp1[6]=9;
-				temp1[5]=9;
-				temp1[4]=9;
-				temp1[3]=9;
-				temp1[2]=9;
-				temp1[1]=9;
-			}
-			else
-			{
-				//FIN DEL TEMP1
-				int i;
-			for (i=0;i<7;i++)
-			{
-				temp1[i]=0;
-			}
-			}
+			temp1[i]=0;
 		}
 	}
 }
 
-void EINT0_IRQHandler()	//Controla la visualización KEY0
+void Sys_Timer2()
+{
+	if(temp1[1]!=0)
+	{
+		temp1[1]--;
+	}
+	else if(temp1[2]!=0)
+	{
+		temp1[2]--;
+		temp1[1]=9;
+	}
+	else if(temp1[3]!=0)
+	{
+		temp1[3]--;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else if(temp1[4]!=0)
+	{
+		temp1[4]--;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else if(temp1[5]!=0)
+	{
+		temp1[5]--;
+		temp1[4]=9;
+		temp1[3]=6;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else if(temp1[6]!=0)
+	{
+		temp1[6]--;
+		temp1[5]=5;
+		temp1[4]=9;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;	
+	}
+	else if(temp1[7]!=0)
+	{
+		temp1[7]--;
+		temp1[6]=9;
+		temp1[5]=5;
+		temp1[4]=9;
+		temp1[3]=5;
+		temp1[2]=9;
+		temp1[1]=9;
+	}
+	else
+	{
+		//FIN DEL TEMP2
+		int i;
+		for (i=0;i<7;i++)
+		{
+			temp1[i]=0;
+		}
+	}
+}
+
+void DAC_Alarma1()
+{
+	
+}
+
+void SysTick_Handler(void)		//Gestiona los valores del reloj
+{
+	Sys_Reloj();
+	
+	if((LPC_GPIO1->FIOPIN & (1<<4))==16)	//Alarma 1
+	{
+		if(alarma1[0]==tiempo[4] && alarma1[1]==tiempo[5] && alarma1[2]==tiempo[6] && alarma1[3]==tiempo[7])
+			DAC_Alarma1();
+	}
+	
+	/*if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Alarma 1
+	{
+		Sys_Alarma2();
+	}*/
+	
+	if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 1
+	{
+		Sys_Timer1();
+	}
+	
+	/*if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 2
+	{
+		Sys_Timer2();
+	}*/
+}
+
+void EINT0_IRQHandler()	//Controla la visualización - Pulsador ISP
 {
 	delay_1ms(150);
 	LPC_SC->EXTINT |= (1);   // Borrar el flag de la EINT0 --> EXTINT.0
@@ -271,14 +358,14 @@ int main (void)
 					continue;
 				
 				case 1:				//visualizar Alarma_1
-					LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[m+x]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[m]])<<20;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
 				
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[3+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[prog-1]])<<20;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
-						alarma1[3+prog]=incr;
+						alarma1[prog-1]=incr;
 					}	
 					continue;
 				
