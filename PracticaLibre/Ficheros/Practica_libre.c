@@ -23,6 +23,7 @@ int prog; //para acceder al modo programación
 int incr;
 int f; //Frecuencia de Timer1
 int k=0;	//Muestra del DAC
+int contador10s;
 
 void config_GPIO (void)
 {
@@ -153,7 +154,7 @@ void TIMER1_IRQHandler (void)	//Timer para el DAC
 		{
 			LPC_DAC -> DACR = (Onda_Alarma2[k]<<6) | DAC_BIAS;
 		}
-		else if (sel_onda==3)//Temporizadores (solo cambia f)
+		else if (sel_onda==2)//Temporizadores (solo cambia f)
 		{
 			LPC_DAC -> DACR = (Onda_Temporizadores[k]<<6) | DAC_BIAS;
 		}
@@ -261,10 +262,11 @@ void Sys_Timer1()	//Gestiona los valores del Temporizador1
 	else
 	{
 		//FIN DEL TEMP1
-		int i;
-		for (i=0;i<7;i++)
+		contador10s++;
+		if(contador10s>=150)	//Debe ser 100 para contar 10s-> 0.1x100
 		{
-			temp1[i]=0;
+			LPC_TIM1->MCR &= 0xFE;	//Desactiva Timer1
+			contador10s=0;
 		}
 	}
 }
@@ -355,6 +357,12 @@ void SysTick_Handler(void)		//Gestiona el SysTick
 	
 	if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 1
 	{
+		if(temp1[7]==0 && temp1[6]==0 && temp1[5]==0 && temp1[4]==0 && temp1[3]==0 && temp1[2]== 0 && temp1[1]==1)
+		{	
+			sel_onda=2;
+			f=1000;
+			config_Timer1();
+		}
 		Sys_Timer1();
 	}
 	
