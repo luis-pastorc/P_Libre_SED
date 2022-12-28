@@ -22,6 +22,7 @@ int x;	//para mostrar horas o segundos
 int prog; //para acceder al modo programación
 int incr;
 int f; //Frecuencia de Timer1
+int k=0;	//Muestra del DAC
 
 void config_GPIO (void)
 {
@@ -65,7 +66,7 @@ void config_Timer0(void)	//Interrumpe cada 5ms
 	LPC_SC ->PCLKSEL0 |= 1<<3;
 	LPC_TIM1 ->MCR =0x3;
 	LPC_TIM1 ->PR =0;
-	LPC_TIM1 -> MR0 = (50e6/(f*50))-1;
+	LPC_TIM1 -> MR0 = (25000000/(f*100))-1;	
 	LPC_TIM1 ->TC =0;
 	LPC_TIM1 ->TCR |=(1<<0);
  }
@@ -75,9 +76,6 @@ void config_Interrupciones()
 	LPC_SC -> EXTMODE |= (1<<0);		//EINT0 activa por flanco
 	LPC_SC -> EXTMODE |= (1<<1);		//EINT1 activa por flanco
 	LPC_SC -> EXTMODE |= (1<<2);		//EINT2 activa por flanco
-	LPC_SC -> EXTPOLAR &= ~(1<<0);	//EINT0 activa por flanco de subida
-	LPC_SC -> EXTPOLAR &= ~(1<<1);	//EINT1 activa por flanco de subida
-	LPC_SC -> EXTPOLAR &= ~(1<<2);	//EINT2 activa por flanco de subida
 	LPC_SC -> EXTINT |= (0x07);			//flags
 	
 	//Bajar el flag
@@ -89,7 +87,7 @@ void config_Interrupciones()
   NVIC_SetPriorityGrouping(4);
 	NVIC_SetPriority(SysTick_IRQn, 0x2);
 	NVIC_SetPriority (TIMER0_IRQn, 0x2);	//000.10XXX
-	NVIC_SetPriority (TIMER0_IRQn, 0x6);	//001.10XXX
+	NVIC_SetPriority (TIMER1_IRQn, 0x6);	//001.10XXX
   NVIC_SetPriority(EINT0_IRQn, 0x6);		//001.10XXX
   NVIC_SetPriority(EINT1_IRQn, 0x6);		//001.10XXX
   NVIC_SetPriority(EINT2_IRQn, 0x6);		//001.10XXX
@@ -145,25 +143,24 @@ void TIMER0_IRQHandler (void)	//Gestiona la visualización durante 5ms
 
 void TIMER1_IRQHandler (void)	//Timer para el DAC
 {
-	int i;
 	LPC_TIM1 -> IR |= (1<<0);	//Borra el flag
 	
-	if(sel_onda==0)	//Alarma1
-	{
-		LPC_DAC -> DACR = (Onda_Alarma1[i]<<6) | DAC_BIAS;		 
-	}
-	else if (sel_onda==1)	//Alarma2
-	{
-		LPC_DAC -> DACR = (Onda_Alarma2[i]<<6) | DAC_BIAS;
-	}
-	else if (sel_onda==3)//Temporizadores (solo cambia f)
-	{
-		LPC_DAC -> DACR = (Onda_Temporizadores[i]<<6) | DAC_BIAS;
-	}
-	
-	i++;
-	if(i>=100)
-		i=0;
+		if(sel_onda==0)	//Alarma1
+		{
+			LPC_DAC -> DACR = (Onda_Alarma1[k]<<6) | DAC_BIAS;		 
+		}
+		else if (sel_onda==1)	//Alarma2
+		{
+			LPC_DAC -> DACR = (Onda_Alarma2[k]<<6) | DAC_BIAS;
+		}
+		else if (sel_onda==3)//Temporizadores (solo cambia f)
+		{
+			LPC_DAC -> DACR = (Onda_Temporizadores[k]<<6) | DAC_BIAS;
+		}
+
+		k++;
+		if(k>100)
+			k=0;
 }
  
 void Sys_Reloj()	//Gestiona los valores del Reloj
@@ -334,24 +331,20 @@ void Sys_Timer2()	//Gestiona los valores del Temporizador2
 	}
 }
 
-void DAC_Alarma1()	//Configura el DAC para Alarma1
-{
-	sel_onda=0;
-	f=300;
-	config_Timer1();
-	//Habilita Timer1
-	//Espero 10s
-	//Apago Timer1
-}
-
 void SysTick_Handler(void)		//Gestiona el SysTick
 {
 	Sys_Reloj();
 	
 	if((LPC_GPIO1->FIOPIN & (1<<4))==16)	//Alarma 1
 	{
-		if(alarma1[0]==tiempo[4] && alarma1[1]==tiempo[5] && alarma1[2]==tiempo[6] && alarma1[3]==tiempo[7])
-			DAC_Alarma1();
+		if(alarma1[0]==tiempo[4] && alarma1[1]==tiempo[5] && alarma1[2]==tiempo[6] && alarma1[3]==tiempo[7] && tiempo[3]==0 && tiempo[2]== 0 && tiempo[1]==0)
+		{	
+			sel_onda=0;
+			f=300;
+			config_Timer1();
+		}
+		if(alarma1[0]==tiempo[4] && alarma1[1]==tiempo[5] && alarma1[2]==tiempo[6] && alarma1[3]==tiempo[7] && tiempo[3]==0 && tiempo[2]==9 && tiempo[1]==9)
+			LPC_TIM1->MCR &= 0xFE;//Desactiva Timer1
 	}
 	
 	/*if((LPC_GPIO1->FIOPIN & (??))==16)	//Alarma 2
