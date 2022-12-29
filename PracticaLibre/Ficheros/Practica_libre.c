@@ -39,11 +39,15 @@ void config_GPIO (void)
 	LPC_GPIO0->FIODIR &= ~(1<<3);					// P0.3 definido como entrada - Switch texto/timer
 	LPC_GPIO1->FIODIR &= ~(1<<0);					// P1.0 definido como entrada - Switch Temp1 
 	LPC_GPIO1->FIODIR &= ~(1<<4);					// P1.4 definido como entrada - Switch Alarma1
+	LPC_GPIO1->FIODIR &= ~(1<<1);					// P1.1 definido como entrada - Switch Temp2
+	LPC_GPIO1->FIODIR &= ~(1<<9);					// P1.9 definido como entrada - Switch Alarma1
 	
-	LPC_PINCON->PINMODE0 &= ~(3<<2*3);		//P0.3 a pull-down
+	LPC_PINCON->PINMODE0 &= ~(3<<2*3);	//P0.3 a pull-down
 	LPC_PINCON->PINMODE0 |= (3<<2*2);		//P0.2 a pull-down
 	LPC_PINCON->PINMODE2 |= (3<<0*2);		//P1.0 a pull-down
 	LPC_PINCON->PINMODE2 |= (3<<4*2);		//P1.4 a pull-down
+	LPC_PINCON->PINMODE2 |= (3<<1*2);		//P1.1 a pull-down
+	LPC_PINCON->PINMODE2 |= (3<<9*2);		//P1.9 a pull-down
 } 
 
 void config_Systick(void)
@@ -325,10 +329,11 @@ void Sys_Timer2()	//Gestiona los valores del Temporizador2
 	else
 	{
 		//FIN DEL TEMP2
-		int i;
-		for (i=0;i<7;i++)
+		contador10s++;
+		if(contador10s>=150)	//Debe ser 100 para contar 10s-> 0.1x100
 		{
-			temp2[i]=0;
+			LPC_TIM1->MCR &= 0xFE;	//Desactiva Timer1
+			contador10s=0;
 		}
 	}
 }
@@ -349,11 +354,17 @@ void SysTick_Handler(void)		//Gestiona el SysTick
 			LPC_TIM1->MCR &= 0xFE;//Desactiva Timer1
 	}
 	
-	/*if((LPC_GPIO1->FIOPIN & (??))==16)	//Alarma 2
+	if((LPC_GPIO1->FIOPIN & (1<<9))==512)	//Alarma 2
 	{
-		if(alarma2[0]==tiempo[4] && alarma2[1]==tiempo[5] && alarma2[2]==tiempo[6] && alarma2[3]==tiempo[7])
-			DAC_Alarma2();
-	}*/
+		if(alarma2[0]==tiempo[4] && alarma2[1]==tiempo[5] && alarma2[2]==tiempo[6] && alarma2[3]==tiempo[7] && tiempo[3]==0 && tiempo[2]== 0 && tiempo[1]==0)
+		{
+			sel_onda=1;
+			f=5000;
+			config_Timer1();
+		}
+		if(alarma2[0]==tiempo[4] && alarma2[1]==tiempo[5] && alarma2[2]==tiempo[6] && alarma2[3]==tiempo[7] && tiempo[3]==0 && tiempo[2]==9 && tiempo[1]==9)
+			LPC_TIM1->MCR &= 0xFE;//Desactiva Timer1
+	}
 	
 	if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 1
 	{
@@ -366,10 +377,16 @@ void SysTick_Handler(void)		//Gestiona el SysTick
 		Sys_Timer1();
 	}
 	
-	/*if((LPC_GPIO1->FIOPIN & (1<<0))==1)	//Temporizador 2
+	if((LPC_GPIO1->FIOPIN & (1<<1))==2)	//Temporizador 2
 	{
+		if(temp2[7]==0 && temp2[6]==0 && temp2[5]==0 && temp2[4]==0 && temp2[3]==0 && temp2[2]== 0 && temp2[1]==1)
+		{	
+			sel_onda=2;
+			f=2000;
+			config_Timer1();
+		}
 		Sys_Timer2();
-	}*/
+	}
 }
 
 void EINT0_IRQHandler()	//Controla la visualización - Pulsador ISP
@@ -453,14 +470,14 @@ int main (void)
 					continue;
 				
 				case 2:				//visualizar Alarma_2
-					LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[m+x]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[m]])<<20;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
 				
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[3+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[prog-1]])<<20;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
-						alarma2[3+prog]=incr;
+						alarma2[prog-1]=incr;
 					}	
 					continue;
 				
