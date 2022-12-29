@@ -40,7 +40,7 @@ void config_GPIO (void)
 	LPC_GPIO1->FIODIR &= ~(1<<0);					// P1.0 definido como entrada - Switch Temp1 
 	LPC_GPIO1->FIODIR &= ~(1<<4);					// P1.4 definido como entrada - Switch Alarma1
 	
-	LPC_PINCON->PINMODE0 &= ~(3<<2*3);		//P0.3 a pull-up
+	LPC_PINCON->PINMODE0 &= ~(3<<2*3);		//P0.3 a pull-down
 	LPC_PINCON->PINMODE0 |= (3<<2*2);		//P0.2 a pull-down
 	LPC_PINCON->PINMODE2 |= (3<<0*2);		//P1.0 a pull-down
 	LPC_PINCON->PINMODE2 |= (3<<4*2);		//P1.4 a pull-down
@@ -201,7 +201,7 @@ void Sys_Reloj()	//Gestiona los valores del Reloj
 	if(tiempo[7]>=2 && tiempo[6]==4)	//si llega a 24h reinicia
 	{
 		int i;
-		for (i=0;i<7;i++)
+		for (i=0;i<8;i++)
 		{
 			tiempo[i]=0;
 		}
@@ -465,14 +465,14 @@ int main (void)
 					continue;
 				
 				case 3:				//visualizar Temporizador_1
-					LPC_GPIO1->FIOPIN = (NUMEROS[temp1[m+x]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[temp1[m+x]])<<20;	//Si hago m+x+2 este modo mostrará mins:segs
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
 				
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[temp1[3+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[temp1[1+prog]])<<20;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
-						temp1[3+prog]=incr;
+						temp1[1+prog]=incr;
 					}	
 					continue;
 				
@@ -482,9 +482,9 @@ int main (void)
 					
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[temp2[3+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[temp2[1+prog]])<<20;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
-						temp2[3+prog]=incr;
+						temp2[1+prog]=incr;
 					}	
 					continue;
 			 }
