@@ -27,14 +27,16 @@ int contador10s;
 
 void config_GPIO (void)
 {
-	//Configuración de los pines P2.10 a P2.12, como entradas de interrupción
+	//Configuración de los pines P2.10 a P2.13, como entradas de interrupción
 	LPC_PINCON->PINSEL4 |= 1 << (10*2);	//EINT0
 	LPC_PINCON->PINSEL4 |= 1 << (11*2); //EINT1 
 	LPC_PINCON->PINSEL4 |= 1 << (12*2);	//EINT2
+	LPC_PINCON->PINSEL4 |= 1 << (13*2);	//EINT3
+
 	
-  LPC_GPIO1->FIODIR |= (255<<19);				// P1.19 hasta P1.26 definido como salida
-	LPC_GPIO1 -> FIODIR |= (1<<26);				// P1.26 definido como salida - DAC
-	LPC_GPIO2->FIODIR |= (15<<0);					// P2.0 hasta P2.3 como salida
+  LPC_GPIO1->FIODIR |= (255<<19);				// P1.19 hasta P1.26 definidos como salida - Segmentos display
+	LPC_GPIO0->FIODIR |= (1<<26);				// P0.26 definido como salida - DAC
+	LPC_GPIO2->FIODIR |= (15<<0);					// P2.0 hasta P2.3 como salida - On/Off displays
 	LPC_GPIO0->FIODIR &= ~(1<<2);					// P0.2 definido como entrada - Switch horas/segundos
 	LPC_GPIO0->FIODIR &= ~(1<<3);					// P0.3 definido como entrada - Switch texto/timer
 	LPC_GPIO1->FIODIR &= ~(1<<0);					// P1.0 definido como entrada - Switch Temp1 
@@ -81,12 +83,14 @@ void config_Interrupciones()
 	LPC_SC -> EXTMODE |= (1<<0);		//EINT0 activa por flanco
 	LPC_SC -> EXTMODE |= (1<<1);		//EINT1 activa por flanco
 	LPC_SC -> EXTMODE |= (1<<2);		//EINT2 activa por flanco
-	LPC_SC -> EXTINT |= (0x07);			//flags
+	LPC_SC -> EXTMODE |= (1<<3);		//EINT3 activa por flanco
+	LPC_SC -> EXTINT |= (0x15);			//flags
 	
 	//Bajar el flag
 	NVIC_ClearPendingIRQ(EINT0_IRQn);
 	NVIC_ClearPendingIRQ(EINT1_IRQn);
 	NVIC_ClearPendingIRQ(EINT2_IRQn);
+	NVIC_ClearPendingIRQ(EINT3_IRQn);
 	
 	//Asignación de prioridades
   NVIC_SetPriorityGrouping(4);
@@ -96,11 +100,13 @@ void config_Interrupciones()
   NVIC_SetPriority(EINT0_IRQn, 0x6);		//001.10XXX
   NVIC_SetPriority(EINT1_IRQn, 0x6);		//001.10XXX
   NVIC_SetPriority(EINT2_IRQn, 0x6);		//001.10XXX
+	NVIC_SetPriority(EINT3_IRQn, 0x6);		//001.10XXX
 
 	//Habilitación de las interrupciones
   NVIC_EnableIRQ(EINT0_IRQn);
   NVIC_EnableIRQ(EINT1_IRQn);
   NVIC_EnableIRQ(EINT2_IRQn);
+	NVIC_EnableIRQ(EINT3_IRQn);
 	NVIC_EnableIRQ (TIMER0_IRQn);
 	NVIC_EnableIRQ (TIMER1_IRQn);
 	NVIC_EnableIRQ (SysTick_IRQn);
@@ -202,7 +208,7 @@ void Sys_Reloj()	//Gestiona los valores del Reloj
 		tiempo[7]++;	//decena de hora
 		tiempo[6]=0;
 	}
-	if(tiempo[7]>=2 && tiempo[6]==4)	//si llega a 24h reinicia
+	if(tiempo[7]>=2 && tiempo[6]>=4)	//si llega a 24h reinicia
 	{
 		int i;
 		for (i=0;i<8;i++)
@@ -411,10 +417,19 @@ void EINT1_IRQHandler()	//Accede al modo programación con KEY1: 0 No progamacion
 void EINT2_IRQHandler()	//Boton incr
 {
 	delay_1ms(150);
-	LPC_SC->EXTINT |= (1<<2);   // Borrar el flag de la EINT2
+	LPC_SC->EXTINT |= (1<<2);   //Borrar el flag de la EINT2
 	incr++;
 	if (incr>9)
 		incr = 0;
+}
+
+void EINT3_IRQHandler()	//Boton decr
+{
+	delay_1ms(150);
+	LPC_SC->EXTINT |= (1<<3);   //Borrar el flag de la EINT3
+	incr--;
+	if (incr<0)
+		incr = 9;
 }
 
 int main (void)
@@ -434,14 +449,17 @@ int main (void)
 			if((LPC_GPIO0->FIOPIN & (1<<2))==0)	//P0.2 switch_horas_seg
 					x=0;	//muestra segundos
 			else
-					x=4;	//muestra minutos y horas
+				x=4;	//muestra horas:mins
 					
-			/*
-			if(m!=2)
-				LPC_GPIO1->FIOPIN &= ~(1<<19); //Apago punto
+				
+		/*	if(m!=1)
+			{
+				LPC_GPIO1->FIOSET = (1<<19);  // Establecer el pin 1.19 en nivel alto
+			}
 			else
-				LPC_GPIO1->FIOPIN |= (1<<19); //Enciendo punto
-			*/
+			{
+				LPC_GPIO1->FIOCLR = (1<<19);  // Establecer el pin 1.19 en nivel bajo
+			}	*/
 			
 			switch(entradas)
 			{
