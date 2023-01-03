@@ -7,35 +7,35 @@ uint32_t SystemFrequency=100000000;
 
 int NUMEROS[10]={0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90}; //0....9
 int HOLA[4]= {0x89,0xC0,0xC7,0x88};	//H O L A
-int tiempo[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
-int alarma1[4]={0,0,0,0}; //unidades de m, decenas de m, unidades de h, decenas de h
-int alarma2[4]={0,0,0,0}; //unidades de m, decenas de m, unidades de h, decenas de h
-int temp1[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
-int temp2[8]={0,0,0,0,0,0,0,0}; //centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
+int tiempo[8]={0,0,0,0,0,0,0,0}; 	//centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
+int alarma1[4]={0,0,0,0}; 				//unidades de m, decenas de m, unidades de h, decenas de h
+int alarma2[4]={0,0,0,0}; 				//unidades de m, decenas de m, unidades de h, decenas de h
+int temp1[8]={0,0,0,0,0,0,0,0}; 	//centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
+int temp2[8]={0,0,0,0,0,0,0,0}; 	//centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
 uint16_t Onda_Alarma1[100];
 uint16_t Onda_Alarma2[100];
 uint16_t Onda_Temporizadores[100];
-int sel_onda;	//Selecciona la onda de salida del DAC
-int m;	//cambia cada 5ms para visualizar
-int entradas;	//para gestionar el switch
-int x;	//para mostrar horas o segundos
-int prog; //para acceder al modo programación
+int sel_onda;											//Selecciona la onda de salida del DAC
+int m;														//Cambia cada 5ms para visualizar
+int entradas;											//Gestión del switch-case Reloj-Alarmas-Temporizadores
+int x;														//Selector de modos de visualización
+int prog; 												//Control del modo programación
 int incr;
-int f; //Frecuencia de Timer1
-int k=0;	//Muestra del DAC
-int contador10s;
+int f; 														//Frecuencia de Timer1 que gestiona el DAC
+int k=0;													//Muestra del DAC
+int contador10s;									//Gestiona el tiempo de activación del DAC
 
 void config_GPIO (void)
 {
 	//Configuración de los pines P2.10 a P2.13, como entradas de interrupción
-	LPC_PINCON->PINSEL4 |= 1 << (10*2);	//EINT0
-	LPC_PINCON->PINSEL4 |= 1 << (11*2); //EINT1 
-	LPC_PINCON->PINSEL4 |= 1 << (12*2);	//EINT2
-	LPC_PINCON->PINSEL4 |= 1 << (13*2);	//EINT3
+	LPC_PINCON->PINSEL4 |= 1 << (10*2);		//EINT0
+	LPC_PINCON->PINSEL4 |= 1 << (11*2);	 	//EINT1 
+	LPC_PINCON->PINSEL4 |= 1 << (12*2);		//EINT2
+	LPC_PINCON->PINSEL4 |= 1 << (13*2);		//EINT3
 
 	
   LPC_GPIO1->FIODIR |= (255<<19);				// P1.19 hasta P1.26 definidos como salida - Segmentos display
-	LPC_GPIO0->FIODIR |= (1<<26);				// P0.26 definido como salida - DAC
+	LPC_GPIO0->FIODIR |= (1<<26);					// P0.26 definido como salida - DAC
 	LPC_GPIO2->FIODIR |= (15<<0);					// P2.0 hasta P2.3 como salida - On/Off displays
 	LPC_GPIO0->FIODIR &= ~(1<<2);					// P0.2 definido como entrada - Switch horas/segundos
 	LPC_GPIO0->FIODIR &= ~(1<<3);					// P0.3 definido como entrada - Switch texto/timer
