@@ -447,7 +447,7 @@ int main (void)
 		{
 			
 			if((LPC_GPIO0->FIOPIN & (1<<2))==0)	//P0.2 switch_horas_seg
-					x=0;	//muestra segundos
+				x=0;	//muestra segundos
 			else
 				x=4;	//muestra horas:mins
 					
