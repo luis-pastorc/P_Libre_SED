@@ -42,7 +42,7 @@ void config_GPIO (void)
 	LPC_GPIO1->FIODIR &= ~(1<<0);					// P1.0 definido como entrada - Switch Temp1 
 	LPC_GPIO1->FIODIR &= ~(1<<4);					// P1.4 definido como entrada - Switch Alarma1
 	LPC_GPIO1->FIODIR &= ~(1<<1);					// P1.1 definido como entrada - Switch Temp2
-	LPC_GPIO1->FIODIR &= ~(1<<9);					// P1.9 definido como entrada - Switch Alarma1
+	LPC_GPIO1->FIODIR &= ~(1<<9);					// P1.9 definido como entrada - Switch Alarma2
 	
 	LPC_PINCON->PINMODE0 &= ~(3<<2*3);	//P0.3 a pull-down
 	LPC_PINCON->PINMODE0 |= (3<<2*2);		//P0.2 a pull-down
@@ -135,7 +135,7 @@ void generar_Ondas (void)	//Genera las Ondas para el DAC.
 		if(i<=50)
 			Onda_Alarma2[i]=0;
 		else
-			Onda_Alarma2[i]=1024;
+			Onda_Alarma2[i]=1023;
 	}
 	
 	for (i=0;i<100;i++)
@@ -170,7 +170,7 @@ void TIMER1_IRQHandler (void)	//Timer para el DAC
 		}
 
 		k++;
-		if(k>100)
+		if(k==100)
 			k=0;
 }
  
@@ -440,9 +440,11 @@ int main (void)
 	config_Systick();
 	config_DAC();
 	generar_Ondas();
-	
+
 	while(1) 
 	{
+		
+		
 		if((LPC_GPIO0->FIOPIN & (1<<3))==0)	//P0.3==0 switch_texto_aviso
 		{
 			
@@ -451,15 +453,6 @@ int main (void)
 			else
 				x=4;	//muestra horas:mins
 					
-				
-		/*	if(m!=1)
-			{
-				LPC_GPIO1->FIOSET = (1<<19);  // Establecer el pin 1.19 en nivel alto
-			}
-			else
-			{
-				LPC_GPIO1->FIOCLR = (1<<19);  // Establecer el pin 1.19 en nivel bajo
-			}	*/
 			
 			switch(entradas)
 			{
