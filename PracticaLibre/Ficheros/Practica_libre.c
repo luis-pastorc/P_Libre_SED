@@ -5,8 +5,8 @@
 uint32_t SystemFrequency=100000000;
 #define DAC_BIAS	0x00010000  // Settling time a valor 2,5us
 
-int NUMEROS[10]={0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90}; //0....9
-int HOLA[4]= {0x89,0xC0,0xC7,0x88};	//H O L A
+int NUMEROS[10]={0x81,0xF3,0x49,0x61,0x33,0x25,0x05,0xF1,0x01,0x31}; //0....9
+int HOLA[4]= {0x13,0x81,0x8F,0x11};	//H O L A gfedcbaP
 int tiempo[8]={0,0,0,0,0,0,0,0}; 	//centesimas de s, decimas de s, unidades de s, decenas de s, unidades de m, decenas de m, unidades de h, decenas de h
 int alarma1[4]={0,0,0,0}; 				//unidades de m, decenas de m, unidades de h, decenas de h
 int alarma2[4]={0,0,0,0}; 				//unidades de m, decenas de m, unidades de h, decenas de h
@@ -273,7 +273,7 @@ void Sys_Timer1()	//Gestiona los valores del Temporizador1
 	{
 		//FIN DEL TEMP1
 		contador10s++;
-		if(contador10s>=100)
+		if(contador10s>=200)
 		{
 			LPC_TIM1->MCR &= 0xFE;	//Desactiva Timer1
 			contador10s=0;
@@ -336,7 +336,7 @@ void Sys_Timer2()	//Gestiona los valores del Temporizador2
 	{
 		//FIN DEL TEMP2
 		contador10s++;
-		if(contador10s>=100)	
+		if(contador10s>=200)	
 		{
 			LPC_TIM1->MCR &= 0xFE;	//Desactiva Timer1
 			contador10s=0;
@@ -457,60 +457,71 @@ int main (void)
 			switch(entradas)
 			{
 				case 0:				//visualizar Timer
-					LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[m+x]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[m+x]])<<19;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+					if(m==2)
+						LPC_GPIO1->FIOPIN &= ~(1<<19);
+	
 				
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[3+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[tiempo[3+prog]])<<19;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
 						tiempo[3+prog]=incr;
 					}	
 					continue;
 				
 				case 1:				//visualizar Alarma_1
-					LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[m]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[m]])<<19;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
-				
+					if(m==2)
+						LPC_GPIO1->FIOPIN &= ~(1<<19);
+					
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[prog-1]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[alarma1[prog-1]])<<19;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
 						alarma1[prog-1]=incr;
 					}	
 					continue;
 				
 				case 2:				//visualizar Alarma_2
-					LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[m]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[m]])<<19;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
-				
+					if(m==2)
+						LPC_GPIO1->FIOPIN &= ~(1<<19);
+					
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[prog-1]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[alarma2[prog-1]])<<19;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
 						alarma2[prog-1]=incr;
 					}	
 					continue;
 				
 				case 3:				//visualizar Temporizador_1
-					LPC_GPIO1->FIOPIN = (NUMEROS[temp1[m+x]])<<20;	//Si hago m+x+2 este modo mostrará mins:segs
+					LPC_GPIO1->FIOPIN = (NUMEROS[temp1[m+x]])<<19;	//Si hago m+x+2 este modo mostrará mins:segs
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
-				
+					if(m==2)
+						LPC_GPIO1->FIOPIN &= ~(1<<19);
+					
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[temp1[1+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[temp1[1+prog]])<<19;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
 						temp1[1+prog]=incr;
 					}	
 					continue;
 				
 				case 4:				//visualizar Temporizador_2
-					LPC_GPIO1->FIOPIN = (NUMEROS[temp2[m+x]])<<20;
+					LPC_GPIO1->FIOPIN = (NUMEROS[temp2[m+x]])<<19;
 					LPC_GPIO2->FIOPIN = (1 << (3-m)) & 0xF;
+					if(m==2)
+						LPC_GPIO1->FIOPIN &= ~(1<<19);
 					
 					while (prog!=0)
 					{
-						LPC_GPIO1->FIOPIN = (NUMEROS[temp2[1+prog]])<<20;
+						LPC_GPIO1->FIOPIN = (NUMEROS[temp2[1+prog]])<<19;
 						LPC_GPIO2->FIOPIN = (1 << (4-prog)) & 0xF;
 						temp2[1+prog]=incr;
 					}	
@@ -519,8 +530,8 @@ int main (void)
 		}
 		else			//P0.3 == 1 Visualiza HOLA
 		{	
-				LPC_GPIO1->FIOPIN = (HOLA[m])<<20;
-				LPC_GPIO2->FIOPIN = (1 << m) & 0xF;
+				LPC_GPIO1->FIOPIN = (HOLA[m])<<19;
+				LPC_GPIO2->FIOPIN = (1<<m) & 0xF;
 				continue;
 		}
 	}
