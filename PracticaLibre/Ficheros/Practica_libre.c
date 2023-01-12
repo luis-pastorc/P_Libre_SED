@@ -273,7 +273,7 @@ void Sys_Timer1()	//Gestiona los valores del Temporizador1
 	{
 		//FIN DEL TEMP1
 		contador10s++;
-		if(contador10s>=150)	//Debe ser 100 para contar 10s-> 0.1x100
+		if(contador10s>=100)
 		{
 			LPC_TIM1->MCR &= 0xFE;	//Desactiva Timer1
 			contador10s=0;
@@ -336,7 +336,7 @@ void Sys_Timer2()	//Gestiona los valores del Temporizador2
 	{
 		//FIN DEL TEMP2
 		contador10s++;
-		if(contador10s>=150)	//Debe ser 100 para contar 10s-> 0.1x100
+		if(contador10s>=100)	
 		{
 			LPC_TIM1->MCR &= 0xFE;	//Desactiva Timer1
 			contador10s=0;
